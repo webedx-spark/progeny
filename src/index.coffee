@@ -46,11 +46,6 @@ module.exports =
             _exclusion is path
           else false
       .map (path) ->
-        if extension and '' is sysPath.extname path
-          "#{path}.#{extension}"
-        else
-          path
-      .map (path) ->
         if path[0] is '/' or not parent
           sysPath.join rootPath, path[1..]
         else
@@ -66,17 +61,19 @@ module.exports =
           globs.push path
       deps = globs
 
+    if extension
+      extFiles = []
+      deps.forEach (path) ->
+        if ".#{extension}" isnt sysPath.extname path
+          extFiles.push "#{path}.#{extension}"
+      deps = deps.concat extFiles
+
     if handleDirectory?
       directoryFiles = []
       deps.forEach (path) ->
         directoryPath = handleDirectory path
         directoryFiles.push directoryPath
       deps = deps.concat directoryFiles
-
-    if extension
-      deps.forEach (path) ->
-        if ".#{extension}" isnt sysPath.extname path
-          deps.push "#{path}.#{extension}"
 
     if prefix?
       prefixed = []
