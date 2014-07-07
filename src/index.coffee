@@ -11,11 +11,11 @@ defaultSettings = (extname) ->
       regexp: /^\s*(?:include|extends)\s+(.+)/
     when 'styl'
       regexp: /^\s*@(?:import|require)\s+['"]?([^'"]+)['"]?/
-      exclusion: 'nib'
+      exclusion: /(?:nib|url)/
       supportsGlob: true
+      extensionsList: ['css']
       handleDirectory: (fullPath) ->
-        indexPath = sysPath.join fullPath, 'index.styl'
-        if fs.existsSync indexPath then indexPath else fullPath
+        sysPath.join fullPath, 'index.styl'
     when 'less'
       regexp: /^\s*@import\s+['"]([^'"]+)['"]/
     when 'scss', 'sass'
@@ -55,13 +55,6 @@ module.exports =
           sysPath.join rootPath, path[1..]
         else
           sysPath.join parent, path
-      .map (path) ->
-        if extension and not fs.existsSync path
-          extensionRegex = ///.#{extension}$///
-          basePath = path.replace extensionRegex, ''
-          if fs.existsSync basePath
-            return basePath
-        path
 
     if supportsGlob
       globs = []
@@ -76,12 +69,9 @@ module.exports =
     if handleDirectory?
       directoryFiles = []
       deps.forEach (path) ->
-        stats = fs.lstatSync(path)
-        if stats?.isDirectory()
-          directoryFiles = directoryFiles.concat handleDirectory path
-        else
-          directoryFiles.push path
-      deps = directoryFiles
+        directoryPath = handleDirectory path
+        directoryFiles.push directoryPath
+      deps = deps.concat directoryFiles
 
     if extension
       deps.forEach (path) ->

@@ -8,17 +8,16 @@ describe 'Stylus', ->
     @progeny = progenyFunc
       rootPath: @rootPath
 
-  it 'should find dependencies correctly', (done) ->
+  it 'should find dependencies', (done) ->
     fixtureFile = 'test/fixtures/stylus/stylus.styl'
     @progeny null, fixtureFile, (err, dependencies) =>
       chai.expect dependencies
-        .to.eql [
+        .to.contain \
           "#{@rootPath}/test.styl"
           "#{@rootPath}/test.css"
-        ]
       do done
 
-  it 'should expand dependencies correctly', (done) ->
+  it 'should expand dependencies', (done) ->
     fixtureFile = 'test/fixtures/stylus/stylus.expands.styl'
     @progeny null, fixtureFile, (err, dependencies) =>
       chai.expect dependencies
@@ -28,16 +27,30 @@ describe 'Stylus', ->
           "#{@rootPath}/testDir/deep.styl"
       do done
 
+  it 'should prioritize dependencies', (done) ->
+    fixtureFile = 'test/fixtures/stylus/stylus.priority.styl'
+    firstPriority = "#{@rootPath}/testDir.styl"
+    secondPriority = "#{@rootPath}/testDir/index.styl"
+
+    @progeny null, fixtureFile, (err, dependencies) =>
+      firstIndex = dependencies.indexOf firstPriority
+      secondIndex = dependencies.indexOf secondPriority
+
+      chai.expect dependencies
+        .to.contain \
+          firstPriority
+          secondPriority
+
+      chai.expect(firstIndex).to.be.below secondIndex
+      do done
+
   it 'should respect the shallow option', (done) ->
     progeny = progenyFunc
       rootPath: @rootPath
       shallow: true
     fixtureFile = 'test/fixtures/stylus/stylus.shallow.styl'
     progeny null, fixtureFile, (err, dependencies) =>
-      chai.expect dependencies
-        .to.eql [
-          "#{@rootPath}/testDir/index.styl",
-        ]
+      chai.expect(dependencies).to.be.empty
       do done
 
 
