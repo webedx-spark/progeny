@@ -55,7 +55,7 @@ module.exports =
       globs = []
       deps.forEach (path) ->
         results = glob.sync path
-        if results
+        if results.length
           globs = globs.concat results
         else
           globs.push path
