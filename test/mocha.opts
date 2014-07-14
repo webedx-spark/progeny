@@ -1,0 +1,4 @@
+--require ./node_modules/coffee-script/register
+--ui bdd
+--compilers coffee:./node_modules/coffee-script/register
+--reporter spec
