@@ -3,14 +3,19 @@
 sysPath = require 'path'
 fs = require 'fs'
 each = require 'async-each'
+glob = require 'glob'
 
 defaultSettings = (extname) ->
   switch extname
     when 'jade'
       regexp: /^\s*(?:include|extends)\s+(.+)/
     when 'styl'
-      regexp: /^\s*@import\s+['"]?([^'"]+)['"]?/
-      exclusion: 'nib'
+      regexp: /^\s*@(?:import|require)\s+['"]?([^'"]+)['"]?/
+      exclusion: /(?:nib|url)/
+      supportsGlob: true
+      extensionsList: ['css']
+      handleDirectory: (fullPath) ->
+        sysPath.join fullPath, 'index.styl'
     when 'less'
       regexp: /^\s*@import\s+['"]([^'"]+)['"]/
     when 'scss', 'sass'
@@ -20,7 +25,7 @@ defaultSettings = (extname) ->
       extensionsList: ['scss', 'sass']
 
 module.exports =
-({rootPath, extension, regexp, prefix, exclusion, extensionsList}={}) ->
+({rootPath, extension, regexp, prefix, exclusion, extensionsList, supportsGlob, handleDirectory, shallow}={}) ->
   parseDeps = (data, path, depsList, callback) ->
     parent = sysPath.dirname path if path
     deps = data
@@ -41,20 +46,34 @@ module.exports =
             _exclusion is path
           else false
       .map (path) ->
-        if extension and '' is sysPath.extname path
-          "#{path}.#{extension}"
-        else
-          path
-      .map (path) ->
         if path[0] is '/' or not parent
           sysPath.join rootPath, path[1..]
         else
           sysPath.join parent, path
 
+    if supportsGlob
+      globs = []
+      deps.forEach (path) ->
+        results = glob.sync path
+        if results.length
+          globs = globs.concat results
+        else
+          globs.push path
+      deps = globs
+
     if extension
+      extFiles = []
       deps.forEach (path) ->
         if ".#{extension}" isnt sysPath.extname path
-          deps.push "#{path}.#{extension}"
+          extFiles.push "#{path}.#{extension}"
+      deps = deps.concat extFiles
+
+    if handleDirectory?
+      directoryFiles = []
+      deps.forEach (path) ->
+        directoryPath = handleDirectory path
+        directoryFiles.push directoryPath
+      deps = deps.concat directoryFiles
 
     if prefix?
       prefixed = []
@@ -81,9 +100,12 @@ module.exports =
           callback()
         else
           depsList.push path
-          fs.readFile path, encoding: 'utf8', (err, data) ->
-            return callback() if err
-            parseDeps data, path, depsList, callback
+          if shallow
+            do callback
+          else
+            fs.readFile path, encoding: 'utf8', (err, data) ->
+              return callback() if err
+              parseDeps data, path, depsList, callback
       , callback
     else
       callback()
@@ -97,6 +119,9 @@ module.exports =
     prefix ?= def.prefix
     exclusion ?= def.exclusion
     extensionsList ?= def.extensionsList or []
+    supportsGlob ?= def.supportsGlob or false
+    shallow ?= def.shallow or false
+    handleDirectory ?= def.handleDirectory
 
     run = ->
       parseDeps data, path, depsList, ->
