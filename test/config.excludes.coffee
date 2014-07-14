@@ -1,3 +1,4 @@
+chai = require 'chai'
 progeny = require '..'
 path = require 'path'
 assert = require 'assert'
@@ -27,8 +28,9 @@ describe 'progeny configuration', ->
       getDependencies = progeny progenyConfig
 
       getDependencies null, getFixturePath('excludedDependencies.jade'), (err, dependencies) ->
-        paths =  (getFixturePath x for x in ['excludedDependencyTwo.jade', 'includedDependencyOne.jade'])
-        assert.deepEqual dependencies, paths
+        paths = (getFixturePath x for x in ['excludedDependencyTwo.jade', 'includedDependencyOne.jade'])
+        chai.expect paths
+          .to.not.include.members dependencies
         do done
 
     it 'should accept one string', (done) ->
@@ -37,7 +39,8 @@ describe 'progeny configuration', ->
 
       getDependencies null, getFixturePath('excludedDependencies.jade'), (err, dependencies) ->
         paths =  (getFixturePath x for x in ['excludedDependencyTwo.jade', 'includedDependencyOne.jade'])
-        assert.deepEqual dependencies, paths
+        chai.expect paths
+          .to.not.include.members dependencies
         do done
 
     it 'should accept a list of regexes', (done) ->
@@ -48,7 +51,8 @@ describe 'progeny configuration', ->
       getDependencies = progeny progenyConfig
 
       getDependencies null, getFixturePath('excludedDependencies.jade'), (err, dependencies) ->
-        assert.deepEqual dependencies, [getFixturePath 'includedDependencyOne.jade']
+        chai.expect dependencies
+          .to.include getFixturePath 'includedDependencyOne.jade'
         do done
 
     it 'should accept a list of strings', (done) ->
@@ -59,7 +63,8 @@ describe 'progeny configuration', ->
       getDependencies = progeny progenyConfig
 
       getDependencies null, getFixturePath('excludedDependencies.jade'), (err, dependencies) ->
-        assert.deepEqual dependencies, [getFixturePath 'includedDependencyOne.jade']
+        chai.expect dependencies
+          .to.include getFixturePath 'includedDependencyOne.jade'
         do done
 
     it 'should accept a list of both strings and regexps', (done) ->
@@ -70,5 +75,6 @@ describe 'progeny configuration', ->
       getDependencies = progeny progenyConfig
 
       getDependencies null, getFixturePath('excludedDependencies.jade'), (err, dependencies) ->
-        assert.deepEqual dependencies, [getFixturePath 'includedDependencyOne.jade']
+        chai.expect dependencies
+          .to.include getFixturePath 'includedDependencyOne.jade'
         do done

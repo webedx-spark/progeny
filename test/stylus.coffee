@@ -12,19 +12,21 @@ describe 'Stylus', ->
     fixtureFile = 'test/fixtures/stylus/stylus.styl'
     @progeny null, fixtureFile, (err, dependencies) =>
       chai.expect dependencies
-        .to.contain \
+        .to.include.members [
           "#{@rootPath}/test.styl"
           "#{@rootPath}/test.css"
+        ]
       do done
 
   it 'should expand dependencies', (done) ->
     fixtureFile = 'test/fixtures/stylus/stylus.expands.styl'
     @progeny null, fixtureFile, (err, dependencies) =>
       chai.expect dependencies
-        .to.contain \
-          "#{@rootPath}/testDir/index.styl", 
-          "#{@rootPath}/testDir/test.styl", 
+        .to.include.members [
+          "#{@rootPath}/testDir/index.styl"
+          "#{@rootPath}/testDir/test.styl"
           "#{@rootPath}/testDir/deep.styl"
+        ]
       do done
 
   it 'should prioritize dependencies', (done) ->
@@ -37,9 +39,10 @@ describe 'Stylus', ->
       secondIndex = dependencies.indexOf secondPriority
 
       chai.expect dependencies
-        .to.contain \
+        .to.include.members [
           firstPriority
           secondPriority
+        ]
 
       chai.expect(firstIndex).to.be.below secondIndex
       do done
@@ -49,8 +52,9 @@ describe 'Stylus', ->
       rootPath: @rootPath
       shallow: true
     fixtureFile = 'test/fixtures/stylus/stylus.shallow.styl'
-    progeny null, fixtureFile, (err, dependencies) =>
-      chai.expect(dependencies).to.be.empty
+    progeny null, fixtureFile, (err, dependencies) ->
+      chai.expect dependencies
+        .to.not.include "#{@rootPath}/testDir/deep.styl"
       do done
 
 
