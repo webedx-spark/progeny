@@ -28,7 +28,7 @@ module.exports =
 ({rootPath, extension, regexp, prefix, exclusion, extensionsList, supportsGlob, handleDirectory, shallow}={}) ->
   parseDeps = (data, path, depsList, callback) ->
     parent = sysPath.dirname path if path
-    deps = data
+    paths = data
       .toString()
       .split('\n')
       .map (line) ->
@@ -45,11 +45,15 @@ module.exports =
           when '[object String]' is toString.call _exclusion
             _exclusion is path
           else false
-      .map (path) ->
-        if path[0] is '/' or not parent
-          sysPath.join rootPath, path[1..]
-        else
-          sysPath.join parent, path
+
+    dirs = []
+    dirs.push parent if parent
+    dirs.push rootPath if rootPath and rootPath isnt parent
+
+    deps = []
+    dirs.forEach (dir) ->
+      paths.forEach (path) ->
+        deps.push sysPath.join dir, path
 
     if supportsGlob
       globs = []
