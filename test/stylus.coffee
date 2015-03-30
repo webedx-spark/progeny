@@ -57,4 +57,15 @@ describe 'Stylus', ->
         .to.not.include "#{@rootPath}/testDir/deep.styl"
       do done
 
+  it 'should find project-relative paths', (done) ->
+    progeny = progenyFunc
+      rootPath: @rootPath
+    fixtureFile = 'test/fixtures/stylus/nested/stylus.styl'
+    progeny null, fixtureFile, (err, dependencies) =>
+      chai.expect dependencies
+        .to.include.members [
+          "#{@rootPath}/testDir.styl"
+        ]
+      do done
+
 
